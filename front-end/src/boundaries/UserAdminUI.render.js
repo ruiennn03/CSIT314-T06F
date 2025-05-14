@@ -4,8 +4,49 @@ import React from 'react';
 // They will be bound to the UserAdminUI component instance in its constructor.
 // Therefore, they can access `this.state`, `this.props`, and other component methods.
 const renderingMethods = {
+  renderAdmin() {
+    const { message, error, activeTab } = this.state;
+    const { username } = this.props;
+
+    return (
+      <div className="app-container">
+        <header className="app-header">
+          <h1>Admin Dashboard</h1>
+        </header>
+
+        {/* Admin navbar */}
+        {this.renderAdminNavbar()}
+
+        <main className="app-content">
+          <div className="user-admin-ui-container">
+            {message && (
+              <div className={`message ${message.type}`}>
+                {message.text}
+              </div>
+            )}
+
+            {error && !message && <div className="error-message">{error}</div>}
+
+            {/* Call the appropriate render method based on the active tab */}
+            {activeTab === 'manage'
+              ? this.renderManageUsers()
+              : activeTab === 'create'
+                ? this.renderCreateUser()
+                : activeTab === 'profile'
+                  ? this.renderCreateUserProfile()
+                  : this.renderManageProfiles()}
+          </div>
+        </main>
+
+        <footer className="app-footer">
+          <p>&copy; {new Date().getFullYear()} CleanConnect</p>
+        </footer>
+      </div>
+    );
+  },
+
   renderLogin() {
-    const { loginUsername, loginPassword, loginError, isLoading } = this.state;
+    const { loginUsername, loginPassword, loginUserProfile, loginError, isLoading, loginDropdownOpen } = this.state;
 
     return (
       <div className="login-page">
@@ -16,13 +57,57 @@ const renderingMethods = {
             </svg>
           </div>
 
-          <h1 className="login-title">Admin Login</h1>
+          <h1 className="login-title">CleanConnect Portal</h1>
 
-          <p className="login-subtitle">Enter your credentials to access the admin panel</p>
+          <p className="login-subtitle">Welcome back! Login to access your cleaning service dashboard</p>
 
           {loginError && <div className="login-error">{loginError}</div>}
 
           <form onSubmit={this.handleLoginSubmit} className="login-form">
+            {/* User Profile Selection Dropdown */}
+            <div className="form-group">
+              <label htmlFor="loginUserProfile">User Profile</label>
+              <div className="dropdown-container" ref={this.loginDropdownRef}>
+                <button
+                  type="button"
+                  className="dropdown-button login-dropdown"
+                  onClick={() => this.setState({ loginDropdownOpen: !loginDropdownOpen })}
+                >
+                  <span>{loginUserProfile || "Select Your Role"}</span>
+                  <span className="dropdown-arrow">▼</span>
+                </button>
+
+                {loginDropdownOpen && (
+                  <div className="dropdown-menu">
+                    <div
+                      className="dropdown-item"
+                      onClick={() => this.selectLoginUserProfile('Admin')}
+                    >
+                      Admin
+                    </div>
+                    <div
+                      className="dropdown-item"
+                      onClick={() => this.selectLoginUserProfile('Cleaner')}
+                    >
+                      Cleaner
+                    </div>
+                    <div
+                      className="dropdown-item"
+                      onClick={() => this.selectLoginUserProfile('Homeowner')}
+                    >
+                      Homeowner
+                    </div>
+                    <div
+                      className="dropdown-item"
+                      onClick={() => this.selectLoginUserProfile('Platform Manager')}
+                    >
+                      Platform Manager
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="form-group">
               <label htmlFor="loginUsername">Username</label>
               <input
@@ -61,6 +146,59 @@ const renderingMethods = {
       </div>
     );
   },
+
+  // Render the admin navbar
+  renderAdminNavbar() {
+    const { activeTab } = this.state;
+    const { username } = this.props;
+
+    return (
+      <nav className="navbar">
+        <ul className="navbar-nav">
+          <li className={`nav-item ${activeTab === 'create' ? 'active' : ''}`}>
+            <button
+              className="nav-link"
+              onClick={() => this.navigateTo('create')}
+            >
+              Create User
+            </button>
+          </li>
+          <li className={`nav-item ${activeTab === 'manage' ? 'active' : ''}`}>
+            <button
+              className="nav-link"
+              onClick={() => this.navigateTo('manage')}
+            >
+              Manage Users
+            </button>
+          </li>
+          <li className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`}>
+            <button
+              className="nav-link"
+              onClick={() => this.navigateTo('profile')}
+            >
+              Create User Profile
+            </button>
+          </li>
+          <li className={`nav-item ${activeTab === 'manageProfiles' ? 'active' : ''}`}>
+            <button
+              className="nav-link"
+              onClick={() => this.navigateTo('manageProfiles')}
+            >
+              Manage Profiles
+            </button>
+          </li>
+        </ul>
+
+        <div className="navbar-user">
+          <span className="user-greeting">Welcome, {username}</span>
+          <button className="logout-button" onClick={this.props.onLogout}>
+            Logout
+          </button>
+        </div>
+      </nav>
+    );
+  },
+
 
   renderUserList() {
     const { filteredUsers, loading } = this.state;
@@ -432,17 +570,17 @@ const renderingMethods = {
 
   renderManageProfiles() {
     const { filteredProfiles, profileSearchTerm, profilesLoading } = this.state;
-    
+
     return (
       <div className="manage-profiles-container">
         <h2 className="page-title">Manage User Profiles</h2>
-        
+
         {/* Search form */}
         <form onSubmit={this.handleProfileSearchSubmit} className="search-form">
           <div className="profile-search-group">
             <label htmlFor="profileSearchTerm">Search:</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               id="profileSearchTerm"
               name="profileSearchTerm"
               value={profileSearchTerm}
@@ -455,7 +593,7 @@ const renderingMethods = {
             </button>
           </div>
         </form>
-        
+
         {/* Profiles table */}
         {profilesLoading ? (
           <div className="loading">Loading profiles...</div>
@@ -473,8 +611,8 @@ const renderingMethods = {
               <tbody>
                 {filteredProfiles.length > 0 ? (
                   filteredProfiles.map((profile) => (
-                    <tr 
-                      key={profile.id || profile.name} 
+                    <tr
+                      key={profile.id || profile.name}
                       className={profile.status === 'SUSPENDED' ? 'suspended-row' : ''}
                     >
                       <td>{profile.name}</td>
@@ -485,7 +623,7 @@ const renderingMethods = {
                         </span>
                       </td>
                       <td>
-                        <button 
+                        <button
                           className="view-profile-button"
                           onClick={(e) => {
                             // Stop propagation to prevent any parent handlers
@@ -508,16 +646,16 @@ const renderingMethods = {
             </table>
           </div>
         )}
-        
+
         {/* Profile details - shown when a profile is selected */}
         {this.renderProfileDetails()}
-        
+
         {/* Profile edit modal */}
         {this.renderProfileEditModal && this.renderProfileEditModal()}
-        
+
         {/* Add New User Profile button */}
         <div className="add-profile-button-container">
-          <button 
+          <button
             className="add-profile-button"
             onClick={this.navigateToAddProfile}
           >
@@ -530,9 +668,9 @@ const renderingMethods = {
 
   renderProfileDetails() {
     const { selectedProfile } = this.state;
-    
+
     if (!selectedProfile) return null;
-    
+
     // Convert permissions array from backend to an object for easy checking in JSX
     // Ensure selectedProfile.permissions is an array before calling .includes
     const permissionsArray = Array.isArray(selectedProfile.permissions) ? selectedProfile.permissions : [];
@@ -542,22 +680,22 @@ const renderingMethods = {
       SEARCH_CLEANERS: permissionsArray.includes('SEARCH_CLEANERS'),
       VIEW_REPORTS: permissionsArray.includes('VIEW_REPORTS'),
     };
-    
+
     // Check if status exists, default to ACTIVE if not
     const status = selectedProfile.status || 'ACTIVE';
     const userAccountCount = selectedProfile.userAccountCount !== undefined ? selectedProfile.userAccountCount : 'N/A';
-    
+
     return (
       <div className="profile-details-container">
         <h3>Profile Details: {selectedProfile.name}</h3>
-        
+
         <div className="profile-status">
           <strong>Status:</strong>
           <span className={`status-badge ${status === 'ACTIVE' ? 'active' : 'suspended'}`}>
             {status === 'ACTIVE' ? 'Active' : 'Suspended'}
           </span>
         </div>
-        
+
         <div className="profile-details">
           <h4>Permissions:</h4>
           <ul className="permissions-list">
@@ -588,13 +726,13 @@ const renderingMethods = {
           </ul>
         </div>
         <div className="profile-actions">
-          <button 
+          <button
             className="edit-button"
             onClick={this.handleEditProfile}
           >
             Edit Profile
           </button>
-          <button 
+          <button
             className={status === 'ACTIVE' ? 'suspend-button' : 'activate-button'}
             onClick={this.handleToggleProfileStatus}
           >
@@ -663,7 +801,7 @@ const renderingMethods = {
                   <label htmlFor="edit-SEARCH_CLEANERS">Search Cleaners</label>
                 </div>
 
-                 <div className="edit-permission-option">
+                <div className="edit-permission-option">
                   <input
                     type="checkbox"
                     id="edit-VIEW_REPORTS"

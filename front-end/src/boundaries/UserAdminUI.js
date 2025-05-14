@@ -9,8 +9,10 @@ class UserAdminUI extends Component {
       // Login state
       loginUsername: '',
       loginPassword: '',
+      loginUserProfile: '',
       loginError: null,
       isLoading: false,
+      loginDropdownOpen: false,
 
       // ManageUsers state
       users: [],
@@ -73,6 +75,7 @@ class UserAdminUI extends Component {
     };
 
     this.dropdownRef = React.createRef();
+    this.loginDropdownRef = React.createRef();
 
     // Bind rendering methods from the imported object to this instance
     for (const methodName in renderingMethods) {
@@ -98,6 +101,16 @@ class UserAdminUI extends Component {
         break;
     }
   };
+
+  navigateTo = (tabName) => {
+  // If already on the same tab, just refresh the data
+  if (this.state.activeTab === tabName) {
+    this.refreshActiveTabData();
+  }
+  
+  // Navigate to the tab
+  this.setState({ activeTab: tabName });
+};
 
   componentDidMount() {
     // If authenticated, load users
@@ -145,9 +158,18 @@ class UserAdminUI extends Component {
     this.setState({ [name]: value });
   };
 
+  // In UserAdminUI.js
   handleLoginSubmit = async (e) => {
     e.preventDefault();
-    const { loginUsername, loginPassword } = this.state;
+    const { loginUsername, loginPassword, loginUserProfile } = this.state;
+
+    // Validate that user profile is selected
+    if (!loginUserProfile) {
+      this.setState({
+        loginError: 'Please select a user profile'
+      });
+      return;
+    }
 
     // Show loading state
     this.setState({ isLoading: true, loginError: null });
@@ -155,23 +177,52 @@ class UserAdminUI extends Component {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // For demo purposes, using hardcoded admin credentials
-    if (loginUsername === 'admin' && loginPassword === 'admin123') {
-      // Call the parent component's login handler
-      this.props.onLogin(loginUsername);
+    // For demo purposes, customize login validation based on profile
+    let isValid = false;
+
+    switch (loginUserProfile) {
+      case 'Admin':
+        isValid = loginUsername === 'admin' && loginPassword === 'admin123';
+        break;
+      case 'Cleaner':
+        isValid = loginUsername === 'cleaner' && loginPassword === 'cleaner123';
+        break;
+      case 'Homeowner':
+        isValid = loginUsername === 'homeowner' && loginPassword === 'homeowner123';
+        break;
+      case 'Platform Manager':
+        isValid = loginUsername === 'manager' && loginPassword === 'manager123';
+        break;
+      default:
+        isValid = false;
+    }
+
+    if (isValid) {
+      // Pass both username and userProfile to parent component
+      this.props.onLogin(loginUsername, loginUserProfile);
 
       this.setState({
         loginUsername: '',
         loginPassword: '',
+        loginUserProfile: '',
         loginError: null,
         isLoading: false
       });
     } else {
+      // Show appropriate error message
+      const credentials = loginUserProfile.toLowerCase().replace(/\s+/g, '');
       this.setState({
-        loginError: 'Invalid username or password. Try admin/admin123',
+        loginError: `Invalid credentials for ${loginUserProfile}. Try ${credentials}/${credentials}123`,
         isLoading: false
       });
     }
+  };
+
+  selectLoginUserProfile = (profileType) => {
+    this.setState({
+      loginUserProfile: profileType,
+      loginDropdownOpen: false
+    });
   };
 
   // Get all profiles
@@ -359,7 +410,7 @@ class UserAdminUI extends Component {
 
       // Update the selected profile if found
       if (updatedProfile) {
-        this.setState({ 
+        this.setState({
           selectedProfile: updatedProfile,
           message: {
             text: `Profile ${updatedProfile.name} updated successfully!`,
@@ -1052,40 +1103,23 @@ class UserAdminUI extends Component {
     if (this.dropdownRef.current && !this.dropdownRef.current.contains(event.target)) {
       this.setState({ dropdownOpen: false });
     }
+
+    if (this.loginDropdownRef.current && !this.loginDropdownRef.current.contains(event.target)) {
+      this.setState({ loginDropdownOpen: false });
+    }
   };
 
   // main render method
   render() {
-    const { message, error, activeTab } = this.state;
-
-    // Check explicitly for isAuthenticated being true
-    if (this.props.isAuthenticated !== true) {
-      // If not authenticated, call the renderLogin method (bound from external file)
-      return this.renderLogin();
-    }
-
-    // If authenticated, show admin UI with the appropriate tab
-    return (
-      <div className="user-admin-ui-container">
-        {message && (
-          <div className={`message ${message.type}`}>
-            {message.text}
-          </div>
-        )}
-
-        {error && !message && <div className="error-message">{error}</div>}
-
-        {/* Call the appropriate bound render method based on the active tab */}
-        {activeTab === 'manage'
-          ? this.renderManageUsers()
-          : activeTab === 'create'
-            ? this.renderCreateUser()
-            : activeTab === 'profile'
-              ? this.renderCreateUserProfile()
-              : this.renderManageProfiles()}
-      </div>
-    );
+  // Check explicitly for isAuthenticated being true
+  if (this.props.isAuthenticated !== true) {
+    // If not authenticated, call the renderLogin method
+    return this.renderLogin();
   }
+
+  // If authenticated, call the renderAdmin method which includes the navbar
+  return this.renderAdmin();
+}
 }
 
 export default UserAdminUI;
