@@ -1,116 +1,82 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
-<<<<<<< HEAD
 import UserAdminUI from './boundaries/UserAdminUI';
 import HomeownerUI from './boundaries/HomeownerUI';
-// Import other UI components as needed
-=======
-import Navbar from './boundaries/Navbar';
-import UserAdminUi from './boundaries/UserAdminUI';
-import CleanerUi from './boundaries/CleanerUI';
->>>>>>> backend
+// Import Navbar component if it exists
+// import Navbar from './boundaries/Navbar';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState('');
   const [userProfile, setUserProfile] = useState('');
-  
-  const userAdminRef = useRef(null);
-<<<<<<< HEAD
-  const homeownerRef = useRef(null);
-  // Add refs for other profile UIs if needed
-  
-  // Check if user is already logged in (from localStorage)
-  useEffect(() => {
-    const loggedInUser = localStorage.getItem('user');
-    const savedUserProfile = localStorage.getItem('userProfile');
-    
-    if (loggedInUser) {
-      setIsAuthenticated(true);
-      setUser(loggedInUser);
-      setUserProfile(savedUserProfile);
-    }
-  }, []);
-  
-  const handleLogin = (username, profile) => {
-    setIsAuthenticated(true);
-    setUser(username);
-    setUserProfile(profile);
-    
-    // Store in localStorage for persistence
-    localStorage.setItem('user', username);
-    localStorage.setItem('userProfile', profile);
-=======
+  // currentPage state is missing - add it
+  const [currentPage, setCurrentPage] = useState('manage');
 
+  const userAdminRef = useRef(null);
+  const homeownerRef = useRef(null);
   const cleanerUiRef = useRef(null);
-  
+
   // Check if user is already logged in (from localStorage)
   useEffect(() => {
     try {
       const loggedInUser = localStorage.getItem('user');
+      const savedUserProfile = localStorage.getItem('userProfile');
+
       if (loggedInUser) {
+        // Try to parse if it's JSON, if not use as is
+        try {
           const parsedUser = JSON.parse(loggedInUser);
-          // Crucially check for parsedUser.id as well
-          if (parsedUser && parsedUser.username && parsedUser.id) {
-              setIsAuthenticated(true);
-              setUser(parsedUser);
-          } else {
-              // If essential info like ID is missing, treat as not properly logged in
-              localStorage.removeItem('user');
+          if (parsedUser && parsedUser.username) {
+            setIsAuthenticated(true);
+            setUser(parsedUser);
+            setUserProfile(savedUserProfile || parsedUser.profile);
           }
+        } catch (e) {
+          // If not JSON, use as a string
+          setIsAuthenticated(true);
+          setUser(loggedInUser);
+          setUserProfile(savedUserProfile);
+        }
       }
     } catch (error) {
       console.error('Error parsing user data:', error);
-      // Clear invalid data from localStorage
       localStorage.removeItem('user');
+      localStorage.removeItem('userProfile');
     }
-    
-    // Define the global refresh function for the Navbar to call
+
+    // Define the global refresh function for components to call
     window.refreshActiveTab = () => {
       if (userAdminRef.current && typeof userAdminRef.current.refreshActiveTabData === 'function') {
         userAdminRef.current.refreshActiveTabData();
+      }
+      if (homeownerRef.current && typeof homeownerRef.current.refreshData === 'function') {
+        homeownerRef.current.refreshData();
       }
       if (cleanerUiRef.current && typeof cleanerUiRef.current.refreshActiveTabData === 'function') {
         cleanerUiRef.current.refreshActiveTabData();
       }
     };
-    
+
     // Cleanup
     return () => {
       delete window.refreshActiveTab;
     };
   }, []);
-  
+
   const navigateTo = (page) => {
     setCurrentPage(page);
   };
 
-  const handleLogin = (username, userData) => {
-    if (userData && userData.id) { // Ensure userData.id exist
-        try {
-            const userToStore = {
-                id: userData.id, // Store the ID
-                username: username,
-                profile: userData.profile || null,
-                email: userData.email || '',
-                status: userData.status || 'ACTIVE'
-            };
-            setIsAuthenticated(true);
-            setUser(userToStore);
-            localStorage.setItem('user', JSON.stringify(userToStore));
-        } catch (error) {
-            console.error('Error saving user data:', error);
-            // Clear any partial data that might have been stored
-            localStorage.removeItem('user');
-        }
-    } else {
-        console.error('Login failed: User data, ID missing.', userData);
-        // Clear any existing auth data
-        localStorage.removeItem('user');
-    }
->>>>>>> backend
+  const handleLogin = (username, profile) => {
+    setIsAuthenticated(true);
+    setUser(username);
+    setUserProfile(profile);
+
+    // Store in localStorage for persistence
+    localStorage.setItem('user', username);
+    localStorage.setItem('userProfile', profile);
   };
-  
+
   const handleLogout = () => {
     setIsAuthenticated(false);
     setUser('');
@@ -120,79 +86,28 @@ function App() {
     localStorage.removeItem('userProfile');
   };
 
-<<<<<<< HEAD
   // If not authenticated, show login form
   if (!isAuthenticated) {
     return (
-      <UserAdminUI 
-        onLogin={handleLogin} 
+      <UserAdminUI
+        onLogin={handleLogin}
         isAuthenticated={false}
       />
     );
   }
 
   // Render different UIs based on user profile
-  switch(userProfile) {
+  switch (userProfile) {
     case 'Homeowner':
       return (
-        <HomeownerUI 
+        <HomeownerUI
           ref={homeownerRef}
           username={user}
           isAuthenticated={true}
           onLogout={handleLogout}
-=======
-  return (
-    <div className="app-container">
-      {isAuthenticated ? (
-        // Show the main app when authenticated
-        <>
-          <header className="app-header">
-            <h1>User Administration System</h1>
-          </header>
-          
-          <Navbar 
-            currentPage={currentPage} 
-            navigateTo={navigateTo} 
-            user={user}
-            onLogout={handleLogout}
-          />
-          
-          <main className="app-content">
-            {user?.profile?.name === 'UserAdmin' ? (
-              <UserAdminUi 
-                ref={userAdminRef}
-                initialTab={currentPage} 
-                isAuthenticated={true}
-                onNavigate={navigateTo}
-              />
-            ) : (
-              <CleanerUi 
-                ref={cleanerUiRef}
-                isAuthenticated={true}
-                onNavigate={navigateTo}
-                currentPage={currentPage}
-                user={user ? { 
-                  ...user, // Spread all user properties
-                  id: user.id, // Ensure id is included
-                  profile: user.profile || null // Ensure profile exists
-                } : null}
-              />
-            )}
-          </main>
-          
-          <footer className="app-footer">
-            <p>&copy; {new Date().getFullYear()} User Admin System</p>
-          </footer>
-        </>
-      ) : (
-        // Show just the UserAdminUi for login when not authenticated
-        <UserAdminUi
-          onLogin={handleLogin} 
-          isAuthenticated={false}
->>>>>>> backend
         />
       );
-      
+
     case 'Cleaner':
       return (
         <div className="app-container">
@@ -204,7 +119,7 @@ function App() {
           </div>
         </div>
       );
-      
+
     case 'Platform Manager':
       return (
         <div className="app-container">
@@ -216,11 +131,11 @@ function App() {
           </div>
         </div>
       );
-      
+
     case 'Admin':
     default:
       return (
-        <UserAdminUI 
+        <UserAdminUI
           ref={userAdminRef}
           username={user}
           isAuthenticated={true}

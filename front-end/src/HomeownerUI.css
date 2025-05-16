@@ -143,6 +143,147 @@
   transition: var(--transition);
 }
 
+/* Update the cleaner card and actions styles */
+.cleaner-header {
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.cleaner-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.cleaner-rating {
+  color: #f6b93b;
+  font-weight: 500;
+}
+
+.cleaner-details {
+  padding: 15px;
+  flex-grow: 1;
+}
+
+.cleaner-details p {
+  margin: 8px 0;
+}
+
+.cleaner-actions {
+  display: flex;
+  gap: 10px;
+  padding: 0 15px 15px;
+}
+
+.book-button {
+  flex: 1;
+  padding: 12px 10px;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.book-button:hover {
+  background-color: var(--primary-dark);
+}
+
+.save-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex: 0.8;
+  padding: 12px 10px;
+  background-color: white;
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--border-radius-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.save-button:hover {
+  background-color: var(--gray-100);
+}
+
+.save-button.saved {
+  background-color: #fff8e6;
+  border-color: #f6b93b;
+  color: #d69e2e;
+}
+
+.save-button.saved:hover {
+  background-color: #fff3d1;
+}
+
+.save-icon {
+  font-size: 1.2rem;
+}
+
+.cleaner-card {
+  background-color: white;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+}
+
+.cleaner-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .cleaner-card {
+    background-color: var(--gray-800);
+  }
+  
+  .cleaner-header {
+    border-color: var(--gray-700);
+  }
+  
+  .save-button {
+    background-color: var(--gray-800);
+    border-color: var(--gray-600);
+    color: var(--gray-300);
+  }
+  
+  .save-button:hover {
+    background-color: var(--gray-700);
+  }
+  
+  .save-button.saved {
+    background-color: rgba(246, 185, 59, 0.1);
+    border-color: #b17e28;
+    color: #f6c85f;
+  }
+  
+  .save-button.saved:hover {
+    background-color: rgba(246, 185, 59, 0.2);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 500px) {
+  .cleaner-actions {
+    flex-direction: column;
+  }
+  
+  .save-button {
+    flex: 1;
+  }
+}
+
 .view-details-button {
   background-color: var(--gray-100);
   color: var(--gray-800);
