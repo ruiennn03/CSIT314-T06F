@@ -104,14 +104,14 @@ class UserAdminUI extends Component {
   };
 
   navigateTo = (tabName) => {
-    // If already on the same tab, just refresh the data
-    if (this.state.activeTab === tabName) {
-      this.refreshActiveTabData();
-    }
-
-    // Navigate to the tab
-    this.setState({ activeTab: tabName });
-  };
+  // If already on the same tab, just refresh the data
+  if (this.state.activeTab === tabName) {
+    this.refreshActiveTabData();
+  }
+  
+  // Navigate to the tab
+  this.setState({ activeTab: tabName });
+};
 
   componentDidMount() {
     // If authenticated, load users
@@ -159,6 +159,7 @@ class UserAdminUI extends Component {
     this.setState({ [name]: value });
   };
 
+<<<<<<< HEAD
   // In UserAdminUI.js
   handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -171,85 +172,98 @@ class UserAdminUI extends Component {
       });
       return;
     }
+=======
+  // In UserAdminUI.js, modify the handleLoginSubmit method:
+handleLoginSubmit = async (e) => {
+  e.preventDefault();
+  this.setState({ isLoading: true, loginError: '' });
+>>>>>>> backend
 
-    try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          username: loginUsername,
-          password: loginPassword
-        }),
-      });
+  const { loginUsername, loginPassword } = this.state;
 
-      const data = await response.json();
+  try {
+    const response = await fetch('http://localhost:3001/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ 
+        username: loginUsername, 
+        password: loginPassword 
+      }),
+    });
+      
+    const data = await response.json();
 
-      // For demo purposes, customize login validation based on profile
-      let isValid = false;
+<<<<<<< HEAD
+    // For demo purposes, customize login validation based on profile
+    let isValid = false;
 
-      switch (loginUserProfile) {
-        case 'Admin':
-          isValid = loginUsername === 'admin' && loginPassword === 'admin123';
-          break;
-        case 'Cleaner':
-          isValid = loginUsername === 'cleaner' && loginPassword === 'cleaner123';
-          break;
-        case 'Homeowner':
-          isValid = loginUsername === 'homeowner' && loginPassword === 'homeowner123';
-          break;
-        case 'Platform Manager':
-          isValid = loginUsername === 'manager' && loginPassword === 'manager123';
-          break;
-        default:
-          isValid = false;
-      }
+    switch (loginUserProfile) {
+      case 'Admin':
+        isValid = loginUsername === 'admin' && loginPassword === 'admin123';
+        break;
+      case 'Cleaner':
+        isValid = loginUsername === 'cleaner' && loginPassword === 'cleaner123';
+        break;
+      case 'Homeowner':
+        isValid = loginUsername === 'homeowner' && loginPassword === 'homeowner123';
+        break;
+      case 'Platform Manager':
+        isValid = loginUsername === 'manager' && loginPassword === 'manager123';
+        break;
+      default:
+        isValid = false;
+    }
 
-      if (isValid) {
-        // Pass both username and userProfile to parent component
-        this.props.onLogin(loginUsername, loginUserProfile);
+    if (isValid) {
+      // Pass both username and userProfile to parent component
+      this.props.onLogin(loginUsername, loginUserProfile);
 
-        this.setState({
-          loginUsername: '',
-          loginPassword: '',
-          loginUserProfile: '',
-          loginError: null,
-          isLoading: false
-        });
-      } else {
-        // Show appropriate error message
-        const credentials = loginUserProfile.toLowerCase().replace(/\s+/g, '');
-        this.setState({
-          loginError: `Invalid credentials for ${loginUserProfile}. Try ${credentials}/${credentials}123`,
-          isLoading: false
-        });
-      }
-
-      // Login successful
       this.setState({
         loginUsername: '',
         loginPassword: '',
+        loginUserProfile: '',
         loginError: null,
-        isLoading: false,
-        currentUser: data.user,
-        activeTab: 'manage'
-      });
-
-      // Call the onLogin prop if it exists
-      if (this.props.onLogin) {
-        this.props.onLogin(data.user.username, data.user);
-      }
-
-    } catch (error) {
-      console.error('Login error:', error);
-      this.setState({
-        loginError: error.message || 'Login failed',
         isLoading: false
       });
+    } else {
+      // Show appropriate error message
+      const credentials = loginUserProfile.toLowerCase().replace(/\s+/g, '');
+      this.setState({
+        loginError: `Invalid credentials for ${loginUserProfile}. Try ${credentials}/${credentials}123`,
+        isLoading: false
+      });
+=======
+    if (!response.ok) {
+      throw new Error(data.message || 'Login failed');
+>>>>>>> backend
     }
-  };
+
+    // Login successful
+    this.setState({ 
+      loginUsername: '',
+      loginPassword: '',
+      loginError: null,
+      isLoading: false,
+      currentUser: data.user,
+      activeTab: 'manage'
+    });
+      
+    // Call the onLogin prop if it exists
+    if (this.props.onLogin) {
+      this.props.onLogin(data.user.username, data.user);
+    }
+
+  } catch (error) {
+    console.error('Login error:', error);
+    this.setState({ 
+      loginError: error.message || 'Login failed', 
+      isLoading: false 
+    });
+  }
+};
 
 
   selectLoginUserProfile = (profileType) => {
@@ -1145,15 +1159,15 @@ class UserAdminUI extends Component {
 
   // main render method
   render() {
-    // Check explicitly for isAuthenticated being true
-    if (this.props.isAuthenticated !== true) {
-      // If not authenticated, call the renderLogin method
-      return this.renderLogin();
-    }
-
-    // If authenticated, call the renderAdmin method which includes the navbar
-    return this.renderAdmin();
+  // Check explicitly for isAuthenticated being true
+  if (this.props.isAuthenticated !== true) {
+    // If not authenticated, call the renderLogin method
+    return this.renderLogin();
   }
+
+  // If authenticated, call the renderAdmin method which includes the navbar
+  return this.renderAdmin();
+}
 }
 
 export default UserAdminUI;
