@@ -131,6 +131,14 @@ exports.Prisma.UserAccountScalarFieldEnum = {
   userProfileId: 'userProfileId'
 };
 
+exports.Prisma.UserLoginLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  loginTime: 'loginTime',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent'
+};
+
 exports.Prisma.UserProfileScalarFieldEnum = {
   id: 'id',
   name: 'name',
@@ -140,15 +148,23 @@ exports.Prisma.UserProfileScalarFieldEnum = {
   status: 'status'
 };
 
+exports.Prisma.ServiceCategoryScalarFieldEnum = {
+  id: 'id',
+  serviceCatName: 'serviceCatName',
+  serviceCatDescription: 'serviceCatDescription',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  status: 'status'
+};
+
 exports.Prisma.ServiceListingScalarFieldEnum = {
   id: 'id',
-  serviceType: 'serviceType',
-  title: 'title',
   description: 'description',
   ratePerHr: 'ratePerHr',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   cleanerId: 'cleanerId',
+  serviceCategoryId: 'serviceCategoryId',
   status: 'status'
 };
 
@@ -217,7 +233,13 @@ exports.Permission = exports.$Enums.Permission = {
   MANAGE_SERVICES: 'MANAGE_SERVICES',
   ADMIN_PRIVILEGES: 'ADMIN_PRIVILEGES',
   SEARCH_CLEANERS: 'SEARCH_CLEANERS',
-  VIEW_REPORTS: 'VIEW_REPORTS'
+  VIEW_REPORTS: 'VIEW_REPORTS',
+  MANAGE_CATEGORIES: 'MANAGE_CATEGORIES'
+};
+
+exports.ServiceCategoryStatus = exports.$Enums.ServiceCategoryStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE'
 };
 
 exports.ServiceListingStatus = exports.$Enums.ServiceListingStatus = {
@@ -233,7 +255,9 @@ exports.BookingStatus = exports.$Enums.BookingStatus = {
 
 exports.Prisma.ModelName = {
   UserAccount: 'UserAccount',
+  UserLoginLog: 'UserLoginLog',
   UserProfile: 'UserProfile',
+  ServiceCategory: 'ServiceCategory',
   ServiceListing: 'ServiceListing',
   ProfileView: 'ProfileView',
   Shortlist: 'Shortlist',
