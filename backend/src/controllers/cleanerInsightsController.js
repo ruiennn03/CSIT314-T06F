@@ -11,20 +11,16 @@ class CleanerInsightsController {
      * @param {object} res - Express response object.
      */
     async fetchViewStats(req, res) {
-        try {
-            const cleanerId = req.params.cleanerId;
-            if (!cleanerId) {
-                return res.status(400).json({ error: "Cleaner ID is required" });
-            }
+        const cleanerId = req.user?.id;
 
-            const stats = await this.profileInsightsEntity.fetchViewStats(cleanerId);
+        const stats = await this.profileInsightsEntity.fetchViewStats(cleanerId);
+        if (stats.error) {
+            // If the entity returned an error object, use its status and message
+            return res.status(stats.error.status).json({ error: stats.error.error });
+        }
+        else {
+            // Success: return the statistics
             res.status(200).json(stats);
-        } catch (error) {
-            console.error('Error in fetchViewStats:', error);
-            res.status(500).json({ 
-                error: 'Failed to fetch view statistics',
-                details: error.message 
-            });
         }
     }
 
@@ -34,24 +30,16 @@ class CleanerInsightsController {
      * @param {object} res - Express response object.
      */
     async fetchShortlistCount(req, res) {
-        try {
-            const cleanerId = req.params.cleanerId;
-            if (!cleanerId) {
-                return res.status(400).json({ error: "Cleaner ID is required" });
-            }
+        const cleanerId = req.user?.id;
 
-            const result = await this.profileInsightsEntity.fetchShortlistCount(cleanerId);
-            
-            // For shortlists, we consider 0 count a normal case now
-            res.status(200).json({
-                shortlistCount: result.shortlistCount || 0
-            });
-        } catch (error) {
-            console.error('Error in fetchShortlistCount:', error);
-            res.status(500).json({ 
-                error: 'Failed to fetch shortlist count',
-                details: error.message 
-            });
+        const result = await this.profileInsightsEntity.fetchShortlistCount(cleanerId);
+
+        if (result.error) {
+            return res.status(result.error.status).json({ error: result.error.error });
+        }
+        else {
+            // Handle "You have not been shortlisted yet" message or success
+            res.status(200).json(result);
         }
     }
 }

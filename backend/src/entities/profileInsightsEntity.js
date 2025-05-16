@@ -7,11 +7,11 @@ class ProfileInsightsEntity {
 
     /**
      * Fetches view statistics for a cleaner's profile.
-     * @param {string} cleanerId - The ID of the cleaner.
+     * @param {string} cleanerUserId - The ID of the cleaner.
      * @returns {Promise<{totalViews: number, dailyViewsLastWeek: Array<{date: string, views: number}>}|{error: {status: number, error: string}}>} 
      *          An object with total views and daily views for the last week, or an error object.
      */
-    async fetchViewStats(cleanerId) {
+    async fetchViewStats(cleanerUserId) {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6); // Start of the 6th day ago (to include 7 full days with today)
         sevenDaysAgo.setHours(0, 0, 0, 0);
@@ -23,29 +23,18 @@ class ProfileInsightsEntity {
             // Get total views for all time
             const totalViews = await this.prisma.profileView.count({
                 where: {
-                    viewedProfileId: cleanerId,
+                    viewedProfileId: cleanerUserId,
                 },
             });
 
-            // Return empty data instead of error when no views
             if (totalViews === 0) {
-                return {
-                    totalViews: 0,
-                    dailyViewsLastWeek: Array.from({length: 7}, (_, i) => {
-                        const d = new Date();
-                        d.setDate(d.getDate() - i);
-                        return {
-                            date: d.toISOString().split('T')[0],
-                            views: 0
-                        };
-                    })
-                };
+                return { error: { status: 404, error: "No profile views yet" } };
             }
 
             // Get views within the last 7 days for daily breakdown
             const recentViews = await this.prisma.profileView.findMany({
                 where: {
-                    viewedProfileId: cleanerId,
+                    viewedProfileId: cleanerUserId,
                     viewedAt: {
                         gte: sevenDaysAgo,
                         lte: todayEndDate,
@@ -86,7 +75,7 @@ class ProfileInsightsEntity {
             };
 
         } catch (error) {
-            console.error(`Error fetching view stats for user ${cleanerId}:`, error);
+            console.error(`Error fetching view stats for user ${cleanerUserId}:`, error);
             return { error: { status: 500, error: 'Failed to retrieve profile view statistics due to a server error.' } };
         }
     }
@@ -105,7 +94,11 @@ class ProfileInsightsEntity {
                 },
             });
 
-            return { shortlistCount: count || 0 };
+            if (count === 0) {
+                return { error: { status: 404, error: "You have not been shortlisted yet" } };
+            }
+
+            return { shortlistCount: count };
 
         } catch (error) {
             console.error(`Error fetching shortlist count for cleaner ${cleanerUserId}:`, error);

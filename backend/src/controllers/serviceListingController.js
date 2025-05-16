@@ -12,20 +12,14 @@ class CreateServiceListingController {
      * @param {object} res - Express response object.
      */
     async createServiceListing(req, res) {
-        const { cleanerId } = req.body;
-        if (!cleanerId) {
-            return res.status(400).json({ error: "Cleaner ID is required" });
-        }
-
-        const { serviceCatName, description, ratePerHr: ratePerHrString } = req.body;
+        const cleanerId = req.user?.id;
+        const { serviceType, title, description, ratePerHr: ratePerHrString } = req.body;
         
         const numericRate = parseFloat(ratePerHrString);
-        if (isNaN(numericRate)) {
-            return res.status(400).json({ error: "Invalid rate format" });
-        }
 
         const result = await this.serviceListingEntity.createServiceListing(
-            serviceCatName,
+            serviceType,
+            title,
             description,
             numericRate,
             cleanerId
@@ -51,32 +45,12 @@ class GetServiceListingController {
      * @param {object} req - Express request object.
      * @param {object} res - Express response object.
      */
-    async getAllListingDetails(req, res) {
-        const { cleanerId } = req.params; // Get ID from URL parameter
-
-        if (!cleanerId) {
-            return res.status(400).json({ error: 'Cleaner ID is missing in the request path.' });
-        }
-
-        // Call the entity method with the cleaner's ID from the path
-        const result = await this.serviceListingEntity.getAllCleanerListings(cleanerId);
-
-        if (result.error) {
-            // The entity already includes status in result.error
-            return res.status(result.error.status).json({ error: result.error.error });
-        }
-        // The entity returns an array (possibly empty) on success
-        return res.status(200).json({ listings: result });
-    }
-
-    /**
-     * Handles the HTTP request to get details for a specific service listing.
-     * @param {object} req - Express request object.
-     * @param {object} res - Express response object.
-     */
     async getListingDetails(req, res) {
-        const listingId = req.params.id;
-        const result = await this.serviceListingEntity.getListingDetails(listingId);
+        const requestingUserId = req.user?.id;
+        const listingId = req.params.id; // Get listing ID from route parameters
+
+        // Call the entity method, passing both listing ID and the requesting user's ID
+        const result = await this.serviceListingEntity.getListingDetails(listingId, requestingUserId);
 
         if (result.error) {
             // If the entity returned an error object, use its status and message
@@ -100,31 +74,20 @@ class EditServiceListingController {
      */
     async editServiceListing(req, res) {
         const listingId = req.params.id;
-        
-        // Validate required fields exist in request body
-        if (!req.body || typeof req.body !== 'object') {
-            return res.status(400).json({ error: "Invalid request body" });
+        const cleanerId = req.user?.id;
+
+        const { serviceType, description, ratePerHr } = req.body;
+        const updateData = {};
+
+        // Only include fields in updateData if they are present in the request body
+        if (serviceType !== undefined) updateData.serviceType = serviceType;
+        if (description !== undefined) updateData.description = description;
+        if (ratePerHr !== undefined) {
+            const numericRate = parseFloat(ratePerHr);
+            updateData.ratePerHr = numericRate;
         }
 
-        const { serviceCatName, description, ratePerHr: ratePerHrString } = req.body;
-        
-        // Validate required fields
-        if (!serviceCatName || !description || !ratePerHrString) {
-            return res.status(400).json({ error: "All fields are required" });
-        }
-
-        const numericRate = parseFloat(ratePerHrString);
-        if (isNaN(numericRate)) {
-            return res.status(400).json({ error: "Invalid rate format" });
-        }
-
-        const updateData = {
-            serviceCatName,
-            description,
-            ratePerHr: numericRate
-        };
-
-        const result = await this.serviceListingEntity.editServiceListing(listingId, updateData);
+        const result = await this.serviceListingEntity.editServiceListing(listingId, cleanerId, updateData);
 
         if (result.error) {
             res.status(result.error.status).json({ error: result.error.error });
@@ -145,15 +108,16 @@ class SuspendServiceListingController {
      * @param {object} req - Express request object.
      * @param {object} res - Express response object.
      */
-    async toggleListingStatus(req, res) {
+    async suspendServiceListing(req, res) {
         const listingId = req.params.id;
         const cleanerId = req.user?.id;
 
-        const result = await this.serviceListingEntity.toggleListingStatus(listingId, cleanerId);
+        const result = await this.serviceListingEntity.suspendServiceListing(listingId, cleanerId);
 
         if (result.error) {
             res.status(result.error.status).json({ error: result.error.error });
-        } else {
+        } else if (result === true) {
+            // Entity returned true, meaning success
             res.status(200).json(result);
         }
     }
@@ -189,13 +153,11 @@ class SearchServiceListingsController {
         );
 
         if (result.error) {
-            // Only return error if there was an active search
-            if (req.query.keyword || req.query.serviceType || req.query.minRate || req.query.maxRate) {
-                return res.status(result.error.status).json({ error: result.error.error });
-            }
-            return res.status(200).json([]); // Return empty array when no filters
+            return res.status(result.error.status).json({ error: result.error.error });
         }
-        res.status(200).json(result);
+        else {
+            res.status(200).json({listing: result});
+        }
     }
 }
 

@@ -13,7 +13,6 @@ class UserAdminUI extends Component {
       loginError: null,
       isLoading: false,
       loginDropdownOpen: false,
-      currentUser: null,
 
       // ManageUsers state
       users: [],
@@ -159,7 +158,6 @@ class UserAdminUI extends Component {
     this.setState({ [name]: value });
   };
 
-<<<<<<< HEAD
   // In UserAdminUI.js
   handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -172,31 +170,13 @@ class UserAdminUI extends Component {
       });
       return;
     }
-=======
-  // In UserAdminUI.js, modify the handleLoginSubmit method:
-handleLoginSubmit = async (e) => {
-  e.preventDefault();
-  this.setState({ isLoading: true, loginError: '' });
->>>>>>> backend
 
-  const { loginUsername, loginPassword } = this.state;
+    // Show loading state
+    this.setState({ isLoading: true, loginError: null });
 
-  try {
-    const response = await fetch('http://localhost:3001/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ 
-        username: loginUsername, 
-        password: loginPassword 
-      }),
-    });
-      
-    const data = await response.json();
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-<<<<<<< HEAD
     // For demo purposes, customize login validation based on profile
     let isValid = false;
 
@@ -235,36 +215,8 @@ handleLoginSubmit = async (e) => {
         loginError: `Invalid credentials for ${loginUserProfile}. Try ${credentials}/${credentials}123`,
         isLoading: false
       });
-=======
-    if (!response.ok) {
-      throw new Error(data.message || 'Login failed');
->>>>>>> backend
     }
-
-    // Login successful
-    this.setState({ 
-      loginUsername: '',
-      loginPassword: '',
-      loginError: null,
-      isLoading: false,
-      currentUser: data.user,
-      activeTab: 'manage'
-    });
-      
-    // Call the onLogin prop if it exists
-    if (this.props.onLogin) {
-      this.props.onLogin(data.user.username, data.user);
-    }
-
-  } catch (error) {
-    console.error('Login error:', error);
-    this.setState({ 
-      loginError: error.message || 'Login failed', 
-      isLoading: false 
-    });
-  }
-};
-
+  };
 
   selectLoginUserProfile = (profileType) => {
     this.setState({

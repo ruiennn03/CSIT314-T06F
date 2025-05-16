@@ -12,17 +12,14 @@ class ConfirmedMatchesController {
      */
     async fetchConfirmedMatches(req, res) {
         const cleanerId = req.user?.id;
-        if (!cleanerId) {
-            return res.status(400).json({ error: "Cleaner ID is required" });
-        }
 
         // Extract filters from query parameters
         const { serviceType, startDate, endDate } = req.query;
-        const filters = { 
-            serviceType: serviceType || '',
-            startDate: startDate || '',
-            endDate: endDate || ''
-        };
+        const filters = {};
+        if (serviceType) filters.serviceType = serviceType;
+        if (startDate) filters.startDate = startDate;
+        if (endDate) filters.endDate = endDate;
+
         const result = await this.matchServiceEntity.fetchConfirmedMatches(cleanerId, filters);
 
         if (result.error) {
